@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.Teste" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenBackground">#FFFFFF</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/info</item>
+    <item name="windowSplashScreenAnimationDuration">300</item>
+    <item name="postSplashScreenTheme">@style/Theme.Teste</item>
+    </style>
+</resources>
