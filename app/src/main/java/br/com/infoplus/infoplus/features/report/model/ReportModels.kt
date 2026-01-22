@@ -22,12 +22,17 @@ data class OccurrenceDraft(
     val lat: Double? = null,
     val lon: Double? = null,
 
+    // ✅ Endereço resolvido (reverse geocoding)
+    val street: String = "",
+    val number: String = "",
+    val district: String = "",
+    val city: String = "",
+
     val isAnonymous: Boolean = true,
-
     val attachments: List<Attachment> = emptyList(),
-
     val acceptedTerms: Boolean = false
 )
+
 
 data class ReportUiState(
     val draft: OccurrenceDraft = OccurrenceDraft(),

@@ -11,11 +11,14 @@ import br.com.infoplus.infoplus.features.report.model.AttachmentType
 import br.com.infoplus.infoplus.features.report.model.OccurrenceCategory
 import br.com.infoplus.infoplus.features.report.model.OccurrenceDraft
 import br.com.infoplus.infoplus.features.report.model.ReportUiState
+import br.com.infoplus.infoplus.features.report.location.ReverseGeocoder
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -23,8 +26,9 @@ class ReportViewModel @Inject constructor(
     private val store: ReportLocalStore,
     private val repo: ReportRepository,
     private val locationProvider: LocationProvider,
-    private val network: NetworkMonitor
-) : ViewModel() {
+    private val network: NetworkMonitor,
+    private val reverseGeocoder: ReverseGeocoder
+    ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReportUiState())
     val state = _state.asStateFlow()
@@ -94,18 +98,49 @@ class ReportViewModel @Inject constructor(
 
         viewModelScope.launch {
             _state.value = _state.value.copy(isGettingLocation = true, errorMessage = null)
+
             val loc = locationProvider.getBestLocation()
-            _state.value = _state.value.copy(isGettingLocation = false)
 
             if (loc == null) {
                 _state.value = _state.value.copy(
+                    isGettingLocation = false,
                     errorMessage = "Não foi possível obter localização. Informe manualmente."
                 )
-            } else {
-                updateDraft(_state.value.draft.copy(lat = loc.first, lon = loc.second))
+                return@launch
             }
+
+            val lat = loc.first
+            val lon = loc.second
+
+            // 1) salva coordenadas imediatamente
+            updateDraft(_state.value.draft.copy(lat = lat, lon = lon))
+
+            // 2) resolve endereço em background (não trava UI)
+            val resolved = withContext(Dispatchers.IO) {
+                reverseGeocoder.fromLatLng(lat, lon)
+            }
+
+            _state.value = _state.value.copy(isGettingLocation = false)
+
+            // 3) se conseguiu, salva campos do endereço
+            if (resolved != null) {
+                updateDraft(
+                    _state.value.draft.copy(
+                        street = resolved.street,
+                        number = resolved.number,
+                        district = resolved.district,
+                        city = resolved.city
+                    )
+                )
+            } else {
+                _state.value = _state.value.copy(
+                    errorMessage = "Localização capturada, mas não foi possível obter o endereço."
+                )
+            }
+
         }
     }
+
 
     // --------------------------
     // Envio / Offline pendente

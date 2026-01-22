@@ -65,8 +65,13 @@ class ReportLocalStore(private val context: Context) {
         put("manualLocationText", d.manualLocationText)
         put("lat", d.lat)
         put("lon", d.lon)
+        put("street", d.street)
+        put("number", d.number)
+        put("district", d.district)
+        put("city", d.city)
         put("isAnonymous", d.isAnonymous)
         put("acceptedTerms", d.acceptedTerms)
+
 
         val attachmentsArr = JSONArray().apply {
             d.attachments.forEach { a ->
@@ -106,6 +111,10 @@ class ReportLocalStore(private val context: Context) {
             manualLocationText = o.optString("manualLocationText", ""),
             lat = if (o.isNull("lat")) null else o.optDouble("lat"),
             lon = if (o.isNull("lon")) null else o.optDouble("lon"),
+            street = o.optString("street", ""),
+            number = o.optString("number", ""),
+            district = o.optString("district", ""),
+            city = o.optString("city", ""),
             isAnonymous = o.optBoolean("isAnonymous", true),
             acceptedTerms = o.optBoolean("acceptedTerms", false),
             attachments = attachments

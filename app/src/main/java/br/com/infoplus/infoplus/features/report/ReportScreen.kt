@@ -178,22 +178,26 @@ fun ReportScreen(
                             lat = state.draft.lat,
                             lon = state.draft.lon,
                             manualText = state.draft.manualLocationText,
+
+                            street = state.draft.street,
+                            number = state.draft.number,
+                            district = state.draft.district,
+                            city = state.draft.city,
+
                             onToggleUseCurrent = vm::setUseCurrentLocation,
                             onManualTextChange = vm::setManualLocation,
                             onCaptureNow = {
-                                if (hasLocationPermission) {
-                                    vm.captureLocation(true)
-                                } else {
-                                    pendingLocationCapture = true
-                                    locationPermissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
+                                locationPermissionLauncher.launch(
+                                    arrayOf(
+                                        Manifest.permission.ACCESS_FINE_LOCATION,
+                                        Manifest.permission.ACCESS_COARSE_LOCATION
                                     )
-                                }
+                                )
+                                vm.captureLocation(hasLocationPermission)
                             }
+
                         )
+
 
                         locationError?.let {
                             Text(
