@@ -16,17 +16,16 @@ import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import br.com.infoplus.infoplus.features.report.model.Attachment
 import br.com.infoplus.infoplus.features.report.model.AttachmentType
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import androidx.core.content.FileProvider
 
 @Composable
 fun AttachmentsPickerRow(
@@ -39,36 +38,28 @@ fun AttachmentsPickerRow(
     val context = LocalContext.current
     val canAddMore = attachments.size < maxAttachments
 
-    // -------------------------
-    // Picker: Foto/Vídeo
-    // -------------------------
     val mediaPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let {
             val mime = context.contentResolver.getType(it).orEmpty()
-            val type = if (mime.startsWith("video/")) AttachmentType.VIDEO else AttachmentType.IMAGE
+            val type =
+                if (mime.startsWith("video/")) AttachmentType.VIDEO else AttachmentType.IMAGE
             onAddAttachment(it.toString(), type)
         }
     }
 
-    // -------------------------
-    // Picker: Áudio (arquivo)
-    // -------------------------
     val audioPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let { onAddAttachment(it.toString(), AttachmentType.AUDIO) }
     }
 
-    // -------------------------
-    // Gravação de áudio (MediaRecorder)
-    // -------------------------
     var isRecording by remember { mutableStateOf(false) }
     var recorder by remember { mutableStateOf<MediaRecorder?>(null) }
     var recordPath by remember { mutableStateOf<String?>(null) }
-
     var pendingStartRecord by remember { mutableStateOf(false) }
+    var playAudioUri by remember { mutableStateOf<String?>(null) }
 
     val audioPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -76,8 +67,7 @@ fun AttachmentsPickerRow(
         if (pendingStartRecord) {
             pendingStartRecord = false
             if (granted) {
-                startRecording(
-                    context = context,
+                startRecording(context,
                     onStarted = { rec, path ->
                         recorder = rec
                         recordPath = path
@@ -86,57 +76,44 @@ fun AttachmentsPickerRow(
                     onError = onError
                 )
             } else {
-                onError("Permissão de microfone necessária para gravar áudio.")
+                onError("Permissão de microfone necessária.")
             }
         }
     }
 
     fun stopRecordingAndAttach() {
         try {
-            recorder?.apply {
-                stop()
-                release()
-            }
+            recorder?.stop()
+            recorder?.release()
         } catch (_: Exception) {
-            // MVP: ignora erro se parar muito rápido
         } finally {
             recorder = null
             isRecording = false
         }
 
-        val path = recordPath
-        if (path != null) {
+        recordPath?.let { path ->
             val file = File(path)
-            val contentUri = FileProvider.getUriForFile(
+            val uri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 file
             )
-            onAddAttachment(contentUri.toString(), AttachmentType.AUDIO)
+            onAddAttachment(uri.toString(), AttachmentType.AUDIO)
         }
         recordPath = null
     }
 
-    // -------------------------
-    // UI
-    // -------------------------
-    // -------------------------
-// UI
-// -------------------------
-    var playAudioUri by remember { mutableStateOf<String?>(null) }
-
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(
                 modifier = Modifier.weight(1f),
                 enabled = canAddMore,
                 onClick = {
                     mediaPicker.launch(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                        PickVisualMediaRequest(
+                            ActivityResultContracts.PickVisualMedia.ImageAndVideo
+                        )
                     )
                 }
             ) { Text("Foto/Vídeo") }
@@ -153,7 +130,6 @@ fun AttachmentsPickerRow(
                 onClick = {
                     if (isRecording) stopRecordingAndAttach()
                     else {
-                        if (!canAddMore) return@Button
                         pendingStartRecord = true
                         audioPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
                     }
@@ -173,11 +149,7 @@ fun AttachmentsPickerRow(
                 items(attachments) { a ->
                     AssistChip(
                         onClick = {
-                            if (a.type == AttachmentType.AUDIO) {
-                                playAudioUri = a.uri
-                            } else {
-                                onError("Preview de ${labelFor(a.type)} ainda não implementado.")
-                            }
+                            if (a.type == AttachmentType.AUDIO) playAudioUri = a.uri
                         },
                         label = { Text(labelFor(a.type)) },
                         trailingIcon = {
@@ -188,28 +160,15 @@ fun AttachmentsPickerRow(
                     )
                 }
             }
-
-            Text(
-                "Anexos atuais: ${attachments.size}/$maxAttachments",
-                style = MaterialTheme.typography.bodySmall
-            )
-        } else {
-            Text(
-                "Você pode anexar foto, vídeo ou áudio (até $maxAttachments).",
-                style = MaterialTheme.typography.bodySmall
-            )
-            Text(
-                "Anexos atuais: ${attachments.size}/$maxAttachments",
-                style = MaterialTheme.typography.bodySmall
-            )
         }
 
-        // ✅ Dialog do player (fica dentro do Column para não “sumir”)
         if (playAudioUri != null) {
             AlertDialog(
                 onDismissRequest = { playAudioUri = null },
                 confirmButton = {
-                    TextButton(onClick = { playAudioUri = null }) { Text("Fechar") }
+                    TextButton(onClick = { playAudioUri = null }) {
+                        Text("Fechar")
+                    }
                 },
                 title = { Text("Reproduzir áudio") },
                 text = {
@@ -220,39 +179,47 @@ fun AttachmentsPickerRow(
     }
 }
 
-    private fun labelFor(type: AttachmentType): String =
+private fun labelFor(type: AttachmentType): String =
     when (type) {
         AttachmentType.IMAGE -> "Foto"
         AttachmentType.VIDEO -> "Vídeo"
         AttachmentType.AUDIO -> "Áudio"
     }
 
-/**
- * MVP estável: grava no cacheDir e retorna o path do arquivo.
- */
 private fun startRecording(
     context: Context,
     onStarted: (MediaRecorder, String) -> Unit,
     onError: (String) -> Unit
 ) {
     try {
-        val sdf = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
-        val name = "infoplus_audio_${sdf.format(Date())}.m4a"
-        val path = File(context.cacheDir, name).absolutePath
+        val fileName = "infoplus_audio_${
+            SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        }.m4a"
 
-        val rec = MediaRecorder().apply {
+        val path = File(context.cacheDir, fileName).absolutePath
+
+        val recorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
+
+            // Container
             setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+
+            // Codec
             setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioEncodingBitRate(128000)
-            setAudioSamplingRate(44100)
+
+            // 🔥 QUALIDADE
+            setAudioEncodingBitRate(192_000)
+            setAudioSamplingRate(44_100)
+            setAudioChannels(1)
+
             setOutputFile(path)
             prepare()
             start()
         }
 
-        onStarted(rec, path)
+        onStarted(recorder, path)
+
     } catch (e: Exception) {
-        onError("Falha ao iniciar gravação: ${e.message ?: "erro desconhecido"}")
+        onError("Erro ao gravar áudio: ${e.message}")
     }
 }
