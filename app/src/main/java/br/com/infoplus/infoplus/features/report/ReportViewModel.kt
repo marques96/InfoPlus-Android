@@ -25,9 +25,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlinx.coroutines.flow.first
+import br.com.infoplus.infoplus.core.user.UserProfileStore
+
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
+    private val profileStore: br.com.infoplus.infoplus.core.user.UserProfileStore,
     private val store: ReportLocalStore,
     private val repo: ReportRepository,
     private val locationProvider: LocationProvider,
@@ -56,6 +60,19 @@ class ReportViewModel @Inject constructor(
                 if (draft != null) _state.value = _state.value.copy(draft = draft)
             }
         }
+
+        viewModelScope.launch {
+            profileStore.profileFlow().collect { profile ->
+                val d = _state.value.draft
+                if (d.victimType == VictimType.SELF && profile.gender != Gender.NAO_INFORMADO) {
+                    // só preenche se ainda não estiver preenchido ou se quiser sempre sobrescrever
+                    if (d.victimGender == Gender.NAO_INFORMADO) {
+                        updateDraft(d.copy(victimGender = profile.gender))
+                    }
+                }
+            }
+        }
+
     }
 
     private fun updateDraft(newDraft: OccurrenceDraft) {
@@ -88,7 +105,24 @@ class ReportViewModel @Inject constructor(
     fun setCategory(v: OccurrenceCategory) = updateDraft(_state.value.draft.copy(category = v))
     fun setTitle(v: String) = updateDraft(_state.value.draft.copy(title = v))
     fun setDescription(v: String) = updateDraft(_state.value.draft.copy(description = v))
-    fun setVictimType(v: VictimType) = updateDraft(_state.value.draft.copy(victimType = v))
+    fun setVictimType(v: VictimType) {
+        viewModelScope.launch {
+            if (v == VictimType.SELF) {
+                val profile = profileStore.profileFlow().first()
+                val gender = profile.gender
+                updateDraft(
+                    _state.value.draft.copy(
+                        victimType = v,
+                        victimGender = if (gender != Gender.NAO_INFORMADO) gender else Gender.NAO_INFORMADO
+                    )
+                )
+            } else {
+                // OTHER: mantém gender como está (ou zera)
+                updateDraft(_state.value.draft.copy(victimType = v))
+            }
+        }
+    }
+
     fun setVictimGender(v: Gender) = updateDraft(_state.value.draft.copy(victimGender = v))
     fun setAnonymous(v: Boolean) = updateDraft(_state.value.draft.copy(isAnonymous = v))
     fun setTerms(v: Boolean) = updateDraft(_state.value.draft.copy(acceptedTerms = v))

@@ -13,6 +13,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import br.com.infoplus.infoplus.features.auth.LoginScreen
+import br.com.infoplus.infoplus.features.auth.RegisterScreen
 import br.com.infoplus.infoplus.features.home.HomeScreen
 import br.com.infoplus.infoplus.features.opening.OpeningScreen
 import br.com.infoplus.infoplus.features.report.ReportScreen
@@ -31,6 +32,7 @@ fun AppNavGraph() {
     ) {
         composable(Routes.OPENING) { OpeningScreen(navController) }
         composable(Routes.LOGIN) { LoginScreen(navController) }
+        composable(Routes.REGISTER) { RegisterScreen(navController) }
         composable(Routes.HOME) { HomeScreen(navController) }
         composable(Routes.REPORT) { ReportScreen(navController) }
         composable(Routes.REPORT_SUCCESS) { ReportSuccessScreen(navController) }

@@ -3,6 +3,7 @@ package br.com.infoplus.infoplus.navigation
 object Routes {
     const val OPENING = "opening"
     const val LOGIN = "login"
+    const val REGISTER = "register"
     const val HOME = "home"
     const val REPORT = "report"
     const val REPORT_SUCCESS = "report_success"
