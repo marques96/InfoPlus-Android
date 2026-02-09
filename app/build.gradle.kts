@@ -56,6 +56,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.9.6")
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.google.play.services.location)
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:android-maps-utils:3.8.0")
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)

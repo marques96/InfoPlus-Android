@@ -8,29 +8,58 @@ import androidx.compose.runtime.Composable
 private val LightColorScheme = lightColorScheme(
     primary = InfoPrimary,
     onPrimary = InfoSurfaceLight,
-    secondary = InfoPrimary,
+
+    secondary = InfoSecondary,
     onSecondary = InfoSurfaceLight,
+
+    tertiary = InfoTertiary,
+    onTertiary = InfoSurfaceLight,
+
     background = InfoBgLight,
     onBackground = InfoOnLight,
+
     surface = InfoSurfaceLight,
     onSurface = InfoOnLight,
+
     surfaceVariant = InfoSurfaceVariantLight,
     onSurfaceVariant = InfoOnLightMuted,
+
+    primaryContainer = InfoPrimaryContainerLight,
+    onPrimaryContainer = InfoOnPrimaryContainerLight,
+
+    // Navy container = “institucional”, ótimo p/ status offline-first sem ficar policial
+    secondaryContainer = InfoSecondaryContainerLight,
+    onSecondaryContainer = InfoOnSecondaryContainerLight,
+
     outline = InfoOutlineLight,
     error = InfoError
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = InfoPrimary,
+    primary = InfoPrimaryDark,
     onPrimary = InfoOnDark,
-    secondary = InfoPrimary,
+
+    secondary = InfoSecondary,
     onSecondary = InfoOnDark,
+
+    tertiary = InfoTertiary,
+    onTertiary = InfoOnDark,
+
     background = InfoBgDark,
     onBackground = InfoOnDark,
+
     surface = InfoSurfaceDark,
     onSurface = InfoOnDark,
+
     surfaceVariant = InfoSurfaceVariantDark,
     onSurfaceVariant = InfoOnDarkMuted,
+
+    primaryContainer = InfoPrimaryContainerDark,
+    onPrimaryContainer = InfoOnPrimaryContainerDark,
+
+    secondaryContainer = InfoSecondaryContainerDark,
+    onSecondaryContainer = InfoOnSecondaryContainerDark,
+
     outline = InfoOutlineDark,
     error = InfoError
 )

@@ -3,30 +3,51 @@ package br.com.infoplus.infoplus.features.report
 import android.Manifest
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Button
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import br.com.infoplus.infoplus.core.ui.components.InfoSectionCard
+import br.com.infoplus.infoplus.core.ui.components.ScreenContainer
 import br.com.infoplus.infoplus.features.report.components.AttachmentsPickerRow
-import br.com.infoplus.infoplus.features.report.components.CategoryDropdown
-import br.com.infoplus.infoplus.features.report.components.DateTimePickerCard
-import br.com.infoplus.infoplus.features.report.components.LocationCard
-import br.com.infoplus.infoplus.navigation.Routes
 import br.com.infoplus.infoplus.features.report.model.Gender
+import br.com.infoplus.infoplus.features.report.model.OccurrenceCategory
 import br.com.infoplus.infoplus.features.report.model.VictimType
+import br.com.infoplus.infoplus.navigation.Routes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ReportScreen(
     navController: NavHostController,
@@ -34,22 +55,9 @@ fun ReportScreen(
 ) {
     val state by vm.state.collectAsState()
 
-    // Paleta/estilo do Home
-    val primary = MaterialTheme.colorScheme.primary
-    val titleColor = MaterialTheme.colorScheme.onSurface
-    val subtitleColor = MaterialTheme.colorScheme.onSurfaceVariant
-
-    val bgBrush = Brush.verticalGradient(
-        listOf(
-            MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.surface,
-            MaterialTheme.colorScheme.surfaceVariant
-        )
-    )
-
-    val sectionShape = RoundedCornerShape(18.dp)
-
+    // ==============================
     // Permissão de localização
+    // ==============================
     var hasLocationPermission by remember { mutableStateOf(false) }
     var pendingLocationCapture by remember { mutableStateOf(false) }
 
@@ -67,90 +75,65 @@ fun ReportScreen(
         }
     }
 
-    val locationError = remember(state.errorMessage) {
-        state.errorMessage?.takeIf { it.contains("localiza", ignoreCase = true) }
-    }
-    val genericError = remember(state.errorMessage) {
-        state.errorMessage?.takeIf { it != null && locationError == null }
-    }
-
+    // ==============================
+    // Scaffold
+    // ==============================
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Registrar ocorrência") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Voltar")
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = primary,
-                    titleContentColor = Color.White,
-                    navigationIconContentColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
         },
-        containerColor = Color.Transparent,
-        modifier = Modifier.imePadding()
+        containerColor = androidx.compose.ui.graphics.Color.Transparent
     ) { padding ->
 
-        // Fundo igual ao Home
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(bgBrush)
-                .padding(padding)
-        ) {
+        ScreenContainer(padding = padding) {
+
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 20.dp)
+                contentPadding = PaddingValues(bottom = 24.dp)
             ) {
 
-                // Banner offline (discreto)
-                if (!state.isOnline) {
-                    item {
-                        Card(
-                            shape = sectionShape,
-                            colors = CardDefaults.cardColors(containerColor = Color.White)
+                // ==============================
+                // O QUE ACONTECEU
+                // ==============================
+                item {
+                    InfoSectionCard(title = "O que aconteceu") {
+
+                        Text(
+                            "Categoria",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(Modifier.padding(14.dp)) {
-                                Text(
-                                    "Você está offline",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = titleColor
-                                )
-                                Spacer(Modifier.height(4.dp))
-                                Text(
-                                    "Seu registro será enviado assim que houver conexão com a internet.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color(0xFF2F2F2F)
+                            OccurrenceCategory.values().forEach { cat ->
+                                FilterChip(
+                                    selected = state.draft.category == cat,
+                                    onClick = { vm.setCategory(cat) },
+                                    label = {
+                                        Text(
+                                            cat.name.replace("_", " ")
+                                                .lowercase()
+                                                .replaceFirstChar { it.titlecase() }
+                                        )
+                                    }
                                 )
                             }
                         }
-                    }
-                }
-
-                // SEÇÃO — O que aconteceu
-                item {
-                    SectionCard(
-                        title = "O que aconteceu",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
-                        CategoryDropdown(
-                            selected = state.draft.category,
-                            onSelected = vm::setCategory,
-                            modifier = Modifier.fillMaxWidth()
-                        )
 
                         OutlinedTextField(
                             value = state.draft.title,
                             onValueChange = vm::setTitle,
-                            label = { Text("Título") },
-                            supportingText = { Text("Ex: Assalto na parada") },
+                            label = { Text("Título (mín. 4 caracteres)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -158,170 +141,29 @@ fun ReportScreen(
                         OutlinedTextField(
                             value = state.draft.description,
                             onValueChange = vm::setDescription,
-                            label = { Text("Descrição") },
-                            minLines = 4,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Text(
-                            "Essa ocorrência está acontecendo/aconteceu com você ou com outra pessoa?",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = subtitleColor
-                        )
-
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            RadioButton(
-                                selected = state.draft.victimType == VictimType.SELF,
-                                onClick = { vm.setVictimType(VictimType.SELF) }
-                            )
-                            Text("Comigo", modifier = Modifier.padding(end = 16.dp), color = titleColor)
-
-                            RadioButton(
-                                selected = state.draft.victimType == VictimType.OTHER,
-                                onClick = { vm.setVictimType(VictimType.OTHER) }
-                            )
-                            Text("Outra pessoa", color = titleColor)
-                        }
-
-                        Spacer(Modifier.height(6.dp))
-
-                        if (state.draft.victimType == VictimType.OTHER) {
-                            Text(
-                                "Gênero da vítima (obrigatório)",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = subtitleColor
-                            )
-
-                            Gender.values().forEach { g ->
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    RadioButton(
-                                        selected = state.draft.victimGender == g,
-                                        onClick = { vm.setVictimGender(g) }
-                                    )
-                                    Text(
-                                        g.name.replace("_", " ").lowercase()
-                                            .replaceFirstChar { it.titlecase() },
-                                        color = titleColor
-                                    )
-                                }
-                            }
-                        } else if (state.draft.victimType == VictimType.SELF) {
-                            Text(
-                                "Seu gênero será vinculado ao cadastro (a implementar).",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = subtitleColor
-                            )
-                        }
-
-                        genericError?.let {
-                            Text(
-                                it,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-
-                // SEÇÃO — Onde aconteceu
-                item {
-                    SectionCard(
-                        title = "Onde aconteceu",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
-                        LocationCard(
-                            useCurrent = state.draft.useCurrentLocation,
-                            isGettingLocation = state.isGettingLocation,
-                            lat = state.draft.lat,
-                            lon = state.draft.lon,
-                            manualText = state.draft.manualLocationText,
-
-                            street = state.draft.street,
-                            number = state.draft.number,
-                            district = state.draft.district,
-                            city = state.draft.city,
-
-                            onToggleUseCurrent = vm::setUseCurrentLocation,
-                            onManualTextChange = vm::setManualLocation,
-                            onCaptureNow = {
-                                pendingLocationCapture = true
-                                locationPermissionLauncher.launch(
-                                    arrayOf(
-                                        Manifest.permission.ACCESS_FINE_LOCATION,
-                                        Manifest.permission.ACCESS_COARSE_LOCATION
-                                    )
-                                )
-                            }
-
-                        )
-
-                        locationError?.let {
-                            Text(
-                                it,
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall
-                            )
-                        }
-                    }
-                }
-
-                // SEÇÃO — Quando aconteceu
-                item {
-                    SectionCard(
-                        title = "Quando aconteceu",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
-                        DateTimePickerCard(
-                            dateTimeMillis = state.draft.dateTimeMillis,
-                            onSetNow = { vm.setDateTimeMillis(System.currentTimeMillis()) },
-                            onSetDateTimeMillis = vm::setDateTimeMillis
+                            label = { Text("Descrição (mín. 10 caracteres)") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 4
                         )
                     }
                 }
 
-                // SEÇÃO — Evidências
+                // ==============================
+                // PRIVACIDADE + VÍTIMA
+                // ==============================
                 item {
-                    SectionCard(
-                        title = "Evidências (opcional)",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
-                        Text(
-                            "Você pode anexar foto, vídeo ou áudio para ajudar na verificação.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = subtitleColor
-                        )
+                    InfoSectionCard(title = "Privacidade e vítima") {
 
-                        AttachmentsPickerRow(
-                            attachments = state.draft.attachments,
-                            onAddAttachment = vm::addAttachment,
-                            onRemoveAttachment = vm::removeAttachment,
-                            maxAttachments = 3,
-                            onError = vm::setError
-                        )
-                    }
-                }
-
-                // SEÇÃO — Privacidade
-                item {
-                    SectionCard(
-                        title = "Privacidade",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(Modifier.weight(1f)) {
-                                Text("Enviar como anônimo", color = titleColor)
+                                Text("Denúncia anônima", style = MaterialTheme.typography.bodyMedium)
                                 Text(
-                                    "Seu nome não será exibido no registro.",
+                                    "Recomendado para reduzir riscos e barreiras de relato.",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = subtitleColor
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             Switch(
@@ -329,111 +171,233 @@ fun ReportScreen(
                                 onCheckedChange = vm::setAnonymous
                             )
                         }
+
+                        Divider(Modifier.padding(vertical = 10.dp))
+
+                        Text(
+                            "Quem é a vítima?",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = state.draft.victimType == VictimType.SELF,
+                                onClick = { vm.setVictimType(VictimType.SELF) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
+                            ) { Text("Comigo") }
+
+                            SegmentedButton(
+                                selected = state.draft.victimType == VictimType.OTHER,
+                                onClick = { vm.setVictimType(VictimType.OTHER) },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
+                            ) { Text("Outra pessoa") }
+                        }
+
+                        if (state.draft.victimType == VictimType.OTHER) {
+                            Spacer(Modifier.height(10.dp))
+
+                            Text(
+                                "Gênero da vítima (obrigatório)",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.labelMedium
+                            )
+
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Gender.values()
+                                    .filter { it != Gender.NAO_INFORMADO }
+                                    .forEach { g ->
+                                        FilterChip(
+                                            selected = state.draft.victimGender == g,
+                                            onClick = { vm.setVictimGender(g) },
+                                            label = {
+                                                Text(
+                                                    g.name.replace("_", " ")
+                                                        .lowercase()
+                                                        .replaceFirstChar { it.titlecase() }
+                                                )
+                                            }
+                                        )
+                                    }
+                            }
+
+                            if (state.draft.victimGender == Gender.NAO_INFORMADO) {
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    "Selecione o gênero da vítima para fins estatísticos e políticas públicas.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
                     }
                 }
 
-                // SEÇÃO — Confirmação / Envio
+                // ==============================
+                // ONDE ACONTECEU
+                // ==============================
                 item {
-                    SectionCard(
-                        title = "Confirmação",
-                        titleColor = titleColor,
-                        shape = sectionShape
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Checkbox(
+                    InfoSectionCard(title = "Onde aconteceu") {
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Usar localização atual", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Recomendado para estatística territorial e mapa.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
+                                checked = state.draft.useCurrentLocation,
+                                onCheckedChange = vm::setUseCurrentLocation
+                            )
+                        }
+
+                        if (state.draft.useCurrentLocation) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Button(
+                                    onClick = {
+                                        if (hasLocationPermission) {
+                                            vm.captureLocation(true)
+                                        } else {
+                                            pendingLocationCapture = true
+                                            locationPermissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Text(if (state.isGettingLocation) "Capturando..." else "Capturar localização")
+                                }
+
+                                OutlinedButton(onClick = vm::syncNow) { Text("Sincronizar") }
+                            }
+
+                            if (state.draft.street.isNotBlank() || state.draft.city.isNotBlank()) {
+                                Divider(Modifier.padding(vertical = 6.dp))
+                                Text(
+                                    text = buildString {
+                                        if (state.draft.street.isNotBlank()) append(state.draft.street)
+                                        if (state.draft.number.isNotBlank()) append(", ").append(state.draft.number)
+                                        if (state.draft.district.isNotBlank()) append(" • ").append(state.draft.district)
+                                        if (state.draft.city.isNotBlank()) append(" • ").append(state.draft.city)
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            OutlinedTextField(
+                                value = state.draft.manualLocationText,
+                                onValueChange = vm::setManualLocation,
+                                label = { Text("Informe o local (bairro/cidade/endereço)") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
+
+                // ==============================
+                // EVIDÊNCIAS (foto/vídeo/áudio + gravação) — via componente existente
+                // ==============================
+                item {
+                    InfoSectionCard(title = "Evidências (opcional)") {
+
+                        Text(
+                            text = "Anexe evidências com responsabilidade. Evite expor dados sensíveis desnecessários.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+
+                        Spacer(Modifier.height(10.dp))
+
+                        AttachmentsPickerRow(
+                            attachments = state.draft.attachments,
+                            onAddAttachment = { uri, type -> vm.addAttachment(uri, type) },
+                            onRemoveAttachment = { uri -> vm.removeAttachment(uri) },
+                            maxAttachments = 3,
+                            onError = { msg -> vm.setError(msg) }
+                        )
+                    }
+                }
+
+                // ==============================
+                // CONFIRMAÇÃO / ENVIO
+                // ==============================
+                item {
+                    InfoSectionCard(title = "Confirmação") {
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text("Li e aceito os termos", style = MaterialTheme.typography.bodyMedium)
+                                Text(
+                                    "Uso responsável, sem exposição indevida de dados sensíveis.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Switch(
                                 checked = state.draft.acceptedTerms,
                                 onCheckedChange = vm::setTerms
                             )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Aceito os termos e confirmo as informações.",
-                                color = titleColor
-                            )
                         }
 
-                        if (!state.canSubmit) {
-                            val missing = buildList {
-                                if (state.draft.category == null) add("Selecione uma categoria")
-                                if (state.draft.title.trim().length < 4) add("Informe um título (mín. 4 caracteres)")
-                                if (state.draft.description.trim().length < 10) add("Descreva melhor (mín. 10 caracteres)")
-                                if (state.draft.victimType == null) add("Informe se foi com você ou outra pessoa")
-                                if (state.draft.victimType == VictimType.OTHER && state.draft.victimGender == Gender.NAO_INFORMADO) {
-                                    add("Informe o gênero da vítima")
-                                }
-                                if (!state.draft.acceptedTerms) add("Aceite os termos")
-
-                                val hasLoc =
-                                    (state.draft.useCurrentLocation && state.draft.lat != null && state.draft.lon != null) ||
-                                            (!state.draft.useCurrentLocation && state.draft.manualLocationText.trim().isNotEmpty())
-
-                                if (!hasLoc) add("Informe a localização (capturar ou manual)")
-                            }
-
-                            if (missing.isNotEmpty()) {
-                                Text(
-                                    text = "Para enviar: ${missing.joinToString(" • ")}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.error
-                                )
-                            }
-                        }
+                        Spacer(Modifier.height(10.dp))
 
                         Button(
-                            modifier = Modifier.fillMaxWidth(),
+                            onClick = {
+                                val offline = !state.isOnline
+                                vm.submit {
+                                    navController.navigate("${Routes.REPORT_SUCCESS}?offline=$offline") {
+                                        popUpTo(Routes.REPORT) { inclusive = true }
+                                    }
+                                }
+
+                            },
                             enabled = state.canSubmit,
-                            onClick = { vm.submit { navController.navigate(Routes.REPORT_SUCCESS) } }
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            if (state.isSubmitting) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(18.dp),
-                                    strokeWidth = 2.dp,
-                                    color = Color.White
-                                )
-                                Spacer(Modifier.width(8.dp))
-                                Text("Enviando…")
-                            } else {
-                                Text("Enviar ocorrência")
-                            }
+                            Text(if (state.isSubmitting) "Enviando..." else "Enviar ocorrência")
                         }
 
-                        if (state.isOfflinePending) {
+                        if (!state.isOnline) {
+                            Spacer(Modifier.height(8.dp))
                             Text(
-                                "Registro salvo como pendente. Ele será enviado automaticamente quando houver internet.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = subtitleColor
+                                text = "Você está offline. O registro será salvo e sincronizado automaticamente quando a internet voltar.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
+                    }
+                }
+
+                // ==============================
+                // ERRO (se quiser exibir fora dos cards)
+                // ==============================
+                item {
+                    state.errorMessage?.let { msg ->
+                        Text(
+                            text = msg,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
                     }
                 }
             }
         }
-    }
-}
-
-/**
- * Card de seção no mesmo “feeling” do Home:
- * - container branco
- * - shape 18.dp
- * - espaçamento consistente
- */
-@Composable
-private fun SectionCard(
-    title: String,
-    titleColor: Color,
-    shape: RoundedCornerShape,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    Card(
-        shape = shape,
-        colors = CardDefaults.cardColors(containerColor = Color.White)
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            content = {
-                Text(title, style = MaterialTheme.typography.titleMedium, color = titleColor)
-                content()
-            }
-        )
     }
 }

@@ -7,15 +7,6 @@ data class UserProfile(
     val name: String = "",
     val email: String = "",
     val cpf: String = "",
-    val gender: Gender = Gender.UNSPECIFIED,
+    val gender: Gender = Gender.NAO_INFORMADO,
     val createdAt: Long = System.currentTimeMillis()
 )
-
-enum class Gender {
-    MALE,
-    FEMALE,
-    NON_BINARY,
-    TRANS,
-    OTHER,
-    UNSPECIFIED
-}
