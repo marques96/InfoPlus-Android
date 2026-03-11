@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -6,11 +9,18 @@ plugins {
     alias(libs.plugins.kotlinKapt)
 }
 
+val localProperties = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) {
+        load(FileInputStream(file))
+    }
+}
+val mapsKey = localProperties.getProperty("MAPS_API_KEY", "")
+
 android {
     namespace = "br.com.infoplus.infoplus"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
+
 
     defaultConfig {
         applicationId = "br.com.infoplus.infoplus"
@@ -18,8 +28,9 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        resValue("string", "google_maps_key", mapsKey)
     }
 
     buildTypes {
@@ -31,16 +42,14 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
-    buildFeatures {
-        compose = true
-    }
+    kotlinOptions { jvmTarget = "11" }
+
+    buildFeatures { compose = true }
 }
 
 dependencies {

@@ -24,3 +24,4 @@ data class ReportUiState(
                 && draft.acceptedTerms
                 && !isSubmitting
 }
+

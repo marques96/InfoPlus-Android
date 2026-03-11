@@ -43,6 +43,7 @@ import com.google.maps.android.clustering.ClusterItem
 import com.google.maps.android.clustering.ClusterManager
 import com.google.maps.android.clustering.view.DefaultClusterRenderer
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CasesMapScreen(
@@ -154,7 +155,6 @@ fun CasesMapScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
-
                 // 2️⃣ Legenda/Visibilidade de status
                 Row(
                     modifier = Modifier.fillMaxWidth(),
