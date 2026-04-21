@@ -1,6 +1,6 @@
 package br.com.infoplus.infoplus.features.report
 
-enum class OccurrenceCategory { ASSALTO, ASSEDIO, VIOLENCIA, DESAPARECIMENTO, EMERGENCIA, OUTROS }
+enum class OccurrenceCategory { ASSALTO, ASSEDIO, VIOLENCIA, DESAPARECIMENTO, EMERGENCIA_MEDICA, OUTROS }
 
 data class OccurrenceDraft(
     val category: OccurrenceCategory? = null,

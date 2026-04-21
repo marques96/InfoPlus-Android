@@ -1,6 +1,7 @@
 package br.com.infoplus.infoplus.features.report
 
 import android.Manifest
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
@@ -14,7 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -37,10 +38,13 @@ fun ReportScreen(
     vm: ReportViewModel = hiltViewModel()
 ) {
     val state by vm.state.collectAsState()
+    val shouldShowIntro by vm.shouldShowIntro.collectAsState()
 
-    var currentStep by remember { mutableStateOf(ReportStep.INTRO) }
-    var hasLocationPermission by remember { mutableStateOf(false) }
-    var pendingLocationCapture by remember { mutableStateOf(false) }
+    var currentStep by rememberSaveable { mutableStateOf(ReportStep.CATEGORY) }
+    var hasLocationPermission by rememberSaveable { mutableStateOf(false) }
+    var pendingLocationCapture by rememberSaveable { mutableStateOf(false) }
+    var introDismissedThisSession by rememberSaveable { mutableStateOf(false) }
+    var dontShowIntroAgain by rememberSaveable { mutableStateOf(false) }
 
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
@@ -50,18 +54,47 @@ fun ReportScreen(
                     (res[Manifest.permission.ACCESS_COARSE_LOCATION] == true)
 
         hasLocationPermission = granted
+
         if (pendingLocationCapture) {
             pendingLocationCapture = false
             vm.captureLocation(granted)
         }
     }
 
-    fun nextFromVictimType() {
-        currentStep = if (state.draft.victimType == VictimType.OTHER) {
-            ReportStep.VICTIM_GENDER
-        } else {
-            ReportStep.DESCRIPTION
+    val showIntroScreen = shouldShowIntro == true && !introDismissedThisSession
+
+    BackHandler {
+        if (showIntroScreen) {
+            navController.popBackStack()
+            return@BackHandler
         }
+
+        currentStep = previousStepOrNull(
+            step = currentStep,
+            victimType = state.draft.victimType
+        ) ?: run {
+            navController.popBackStack()
+            return@BackHandler
+        }
+    }
+
+    if (shouldShowIntro == null) return
+
+    if (showIntroScreen) {
+        ReportIntroStep(
+            dontShowAgainChecked = dontShowIntroAgain,
+            onDontShowAgainChange = { dontShowIntroAgain = it },
+            onNext = {
+                if (dontShowIntroAgain) {
+                    vm.setSkipReportIntro(true)
+                }
+                introDismissedThisSession = true
+            },
+            onBack = {
+                navController.popBackStack()
+            }
+        )
+        return
     }
 
     AnimatedContent(
@@ -79,26 +112,19 @@ fun ReportScreen(
                     .togetherWith(
                         slideOutHorizontally { fullWidth -> fullWidth / 4 } + fadeOut()
                     )
-            }.using(
-                SizeTransform(clip = false)
-            )
+            }.using(SizeTransform(clip = false))
         },
         label = "report-step-transition"
     ) { step ->
-
         when (step) {
-            ReportStep.INTRO -> {
-                ReportIntroStep(
-                    onNext = { currentStep = ReportStep.CATEGORY }
-                )
-            }
+            ReportStep.INTRO -> Unit
 
             ReportStep.CATEGORY -> {
                 ReportCategoryStep(
                     selectedCategory = state.draft.category,
                     onSelectCategory = vm::setCategory,
                     onNext = { currentStep = ReportStep.VICTIM_TYPE },
-                    onBack = { currentStep = ReportStep.INTRO }
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -106,7 +132,7 @@ fun ReportScreen(
                 ReportVictimTypeStep(
                     selectedVictimType = state.draft.victimType,
                     onSelectVictimType = vm::setVictimType,
-                    onNext = { nextFromVictimType() },
+                    onNext = { currentStep = ReportStep.VICTIM_GENDER },
                     onBack = { currentStep = ReportStep.CATEGORY }
                 )
             }
@@ -127,13 +153,7 @@ fun ReportScreen(
                     onTitleChange = vm::setTitle,
                     onDescriptionChange = vm::setDescription,
                     onNext = { currentStep = ReportStep.LOCATION },
-                    onBack = {
-                        currentStep = if (state.draft.victimType == VictimType.OTHER) {
-                            ReportStep.VICTIM_GENDER
-                        } else {
-                            ReportStep.VICTIM_TYPE
-                        }
-                    }
+                    onBack = { currentStep = ReportStep.VICTIM_GENDER }
                 )
             }
 
@@ -207,5 +227,22 @@ fun ReportScreen(
                 )
             }
         }
+    }
+}
+
+private fun previousStepOrNull(
+    step: ReportStep,
+    victimType: VictimType?
+): ReportStep? {
+    return when (step) {
+        ReportStep.INTRO -> null
+        ReportStep.CATEGORY -> null
+        ReportStep.VICTIM_TYPE -> ReportStep.CATEGORY
+        ReportStep.VICTIM_GENDER -> ReportStep.VICTIM_TYPE
+        ReportStep.DESCRIPTION -> ReportStep.VICTIM_GENDER
+        ReportStep.LOCATION -> ReportStep.DESCRIPTION
+        ReportStep.ATTACHMENTS -> ReportStep.LOCATION
+        ReportStep.PRIVACY -> ReportStep.ATTACHMENTS
+        ReportStep.REVIEW -> ReportStep.PRIVACY
     }
 }

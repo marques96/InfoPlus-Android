@@ -21,7 +21,6 @@ android {
     namespace = "br.com.infoplus.infoplus"
     compileSdk = 36
 
-
     defaultConfig {
         applicationId = "br.com.infoplus.infoplus"
         minSdk = 24
@@ -47,9 +46,14 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions { jvmTarget = "11" }
 
-    buildFeatures { compose = true }
+    kotlinOptions {
+        jvmTarget = "11"
+    }
+
+    buildFeatures {
+        compose = true
+    }
 }
 
 dependencies {
@@ -61,16 +65,22 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.navigation:navigation-compose:2.9.6")
     implementation("androidx.compose.material:material-icons-extended")
+
     implementation(libs.google.play.services.location)
     implementation("com.google.android.gms:play-services-maps:18.2.0")
     implementation("com.google.maps.android:android-maps-utils:3.8.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+
     implementation(libs.androidx.datastore.preferences)
+
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

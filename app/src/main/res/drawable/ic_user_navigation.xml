@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="56dp"
+    android:height="56dp"
+    android:viewportWidth="56"
+    android:viewportHeight="56">
+
+    <!-- Sombra -->
+    <path
+        android:fillColor="#22000000"
+        android:pathData="M28,8 L44,48 L28,40 L12,48 Z" />
+
+    <!-- Corpo principal -->
+    <path
+        android:fillColor="#7C4DFF"
+        android:pathData="M28,6 L44,46 L28,38 L12,46 Z" />
+
+    <!-- Highlight -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillAlpha="0.25"
+        android:pathData="M28,10 L36,32 L28,28 L20,32 Z" />
+
+</vector>

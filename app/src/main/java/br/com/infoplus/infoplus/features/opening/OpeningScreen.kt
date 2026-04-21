@@ -29,7 +29,7 @@ fun OpeningScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         delay(1200)
-        navController.navigate(Routes.LOGIN) {
+        navController.navigate(Routes.MAP) {
             popUpTo(Routes.OPENING) { inclusive = true }
         }
     }

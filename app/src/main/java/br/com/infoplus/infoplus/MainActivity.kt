@@ -22,7 +22,11 @@ class MainActivity : ComponentActivity() {
             val isDark = themeVm.isDark.collectAsState().value
 
             InfoPlusTheme(darkTheme = isDark) {
-                AppNavGraph()
+                AppNavGraph(
+                    onExitApp = {
+                        finish()
+                    }
+                )
             }
         }
     }

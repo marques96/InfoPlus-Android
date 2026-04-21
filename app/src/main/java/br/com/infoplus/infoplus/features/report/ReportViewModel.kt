@@ -3,48 +3,57 @@ package br.com.infoplus.infoplus.features.report
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.infoplus.infoplus.core.network.NetworkMonitor
+import br.com.infoplus.infoplus.core.user.UserProfileStore
 import br.com.infoplus.infoplus.features.report.data.ReportLocalStore
+import br.com.infoplus.infoplus.features.report.data.ReportPreferences
 import br.com.infoplus.infoplus.features.report.data.ReportRepository
 import br.com.infoplus.infoplus.features.report.location.LocationProvider
+import br.com.infoplus.infoplus.features.report.location.ReverseGeocoder
 import br.com.infoplus.infoplus.features.report.model.Attachment
 import br.com.infoplus.infoplus.features.report.model.AttachmentType
+import br.com.infoplus.infoplus.features.report.model.Gender
 import br.com.infoplus.infoplus.features.report.model.OccurrenceCategory
-import br.com.infoplus.infoplus.features.report.model.OccurrenceDraft
-import br.com.infoplus.infoplus.features.report.model.ReportUiState
-import br.com.infoplus.infoplus.features.report.location.ReverseGeocoder
 import br.com.infoplus.infoplus.features.report.model.OccurrenceRecord
 import br.com.infoplus.infoplus.features.report.model.ReportStatus
+import br.com.infoplus.infoplus.features.report.model.ReportUiState
 import br.com.infoplus.infoplus.features.report.model.VictimType
-import br.com.infoplus.infoplus.features.report.model.Gender
-import java.util.UUID
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.util.UUID
+import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import javax.inject.Inject
 import kotlinx.coroutines.flow.first
-import br.com.infoplus.infoplus.core.user.UserProfileStore
-
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
-    private val profileStore: br.com.infoplus.infoplus.core.user.UserProfileStore,
+    private val profileStore: UserProfileStore,
     private val store: ReportLocalStore,
     private val repo: ReportRepository,
     private val locationProvider: LocationProvider,
     private val network: NetworkMonitor,
-    private val reverseGeocoder: ReverseGeocoder
-    ) : ViewModel() {
+    private val reverseGeocoder: ReverseGeocoder,
+    private val reportPreferences: ReportPreferences
+) : ViewModel() {
 
     private val _state = MutableStateFlow(ReportUiState())
     val state = _state.asStateFlow()
 
+    private val _shouldShowIntro = MutableStateFlow<Boolean?>(null)
+    val shouldShowIntro = _shouldShowIntro.asStateFlow()
+
     private var autosaveJob: Job? = null
 
     init {
+        viewModelScope.launch {
+            reportPreferences.skipReportIntroFlow.collect { skip ->
+                _shouldShowIntro.value = !skip
+            }
+        }
+
         viewModelScope.launch {
             network.isOnlineFlow().collect { online ->
                 _state.value = _state.value.copy(isOnline = online)
@@ -57,26 +66,42 @@ class ReportViewModel @Inject constructor(
 
         viewModelScope.launch {
             store.draftFlow().collect { draft ->
-                if (draft != null) _state.value = _state.value.copy(draft = draft)
+                if (draft != null) {
+                    _state.value = _state.value.copy(draft = draft)
+                }
             }
         }
 
         viewModelScope.launch {
             profileStore.profileFlow().collect { profile ->
-                val d = _state.value.draft
-                if (d.victimType == VictimType.SELF && profile.gender != Gender.NAO_INFORMADO) {
-                    // só preenche se ainda não estiver preenchido ou se quiser sempre sobrescrever
-                    if (d.victimGender == Gender.NAO_INFORMADO) {
-                        updateDraft(d.copy(victimGender = profile.gender))
-                    }
+                val draft = _state.value.draft
+
+                if (
+                    draft.victimType == VictimType.SELF &&
+                    profile.gender != Gender.NAO_INFORMADO &&
+                    draft.victimGender == Gender.NAO_INFORMADO
+                ) {
+                    updateDraft(
+                        draft.copy(victimGender = profile.gender)
+                    )
                 }
             }
         }
-
     }
 
-    private fun updateDraft(newDraft: OccurrenceDraft) {
-        _state.value = _state.value.copy(draft = newDraft, errorMessage = null)
+    fun setSkipReportIntro(skip: Boolean) {
+        viewModelScope.launch {
+            reportPreferences.setSkipReportIntro(skip)
+            _shouldShowIntro.value = !skip
+        }
+    }
+
+    private fun updateDraft(newDraft: br.com.infoplus.infoplus.features.report.model.OccurrenceDraft) {
+        _state.value = _state.value.copy(
+            draft = newDraft,
+            errorMessage = null
+        )
+
         autosaveJob?.cancel()
         autosaveJob = viewModelScope.launch {
             store.saveDraft(newDraft)
@@ -93,7 +118,7 @@ class ReportViewModel @Inject constructor(
                 store.removePending(record.id)
                 store.updateHistoryStatus(record.id, ReportStatus.SYNCED)
             } catch (_: Exception) {
-                // deixa na fila para tentar depois
+                // Mantém na fila para tentar novamente depois.
             }
         }
     }
@@ -102,43 +127,76 @@ class ReportViewModel @Inject constructor(
         _state.value = _state.value.copy(errorMessage = msg)
     }
 
-    fun setCategory(v: OccurrenceCategory) = updateDraft(_state.value.draft.copy(category = v))
-    fun setTitle(v: String) = updateDraft(_state.value.draft.copy(title = v))
-    fun setDescription(v: String) = updateDraft(_state.value.draft.copy(description = v))
+    fun setCategory(v: OccurrenceCategory) {
+        updateDraft(_state.value.draft.copy(category = v))
+    }
+
+    fun setTitle(v: String) {
+        updateDraft(_state.value.draft.copy(title = v))
+    }
+
+    fun setDescription(v: String) {
+        updateDraft(_state.value.draft.copy(description = v))
+    }
+
     fun setVictimType(v: VictimType) {
         viewModelScope.launch {
             if (v == VictimType.SELF) {
                 val profile = profileStore.profileFlow().first()
                 val gender = profile.gender
+
                 updateDraft(
                     _state.value.draft.copy(
                         victimType = v,
-                        victimGender = if (gender != Gender.NAO_INFORMADO) gender else Gender.NAO_INFORMADO
+                        victimGender = if (gender != Gender.NAO_INFORMADO) {
+                            gender
+                        } else {
+                            Gender.NAO_INFORMADO
+                        }
                     )
                 )
             } else {
-                // OTHER: mantém gender como está (ou zera)
-                updateDraft(_state.value.draft.copy(victimType = v))
+                updateDraft(
+                    _state.value.draft.copy(
+                        victimType = v,
+                        victimGender = Gender.NAO_INFORMADO
+                    )
+                )
             }
         }
     }
 
-    fun setVictimGender(v: Gender) = updateDraft(_state.value.draft.copy(victimGender = v))
-    fun setAnonymous(v: Boolean) = updateDraft(_state.value.draft.copy(isAnonymous = v))
-    fun setTerms(v: Boolean) = updateDraft(_state.value.draft.copy(acceptedTerms = v))
+    fun setVictimGender(v: Gender) {
+        updateDraft(_state.value.draft.copy(victimGender = v))
+    }
 
-    fun setUseCurrentLocation(v: Boolean) = updateDraft(_state.value.draft.copy(useCurrentLocation = v))
-    fun setManualLocation(v: String) = updateDraft(_state.value.draft.copy(manualLocationText = v))
-    fun setDateTimeMillis(v: Long) = updateDraft(_state.value.draft.copy(dateTimeMillis = v))
+    fun setAnonymous(v: Boolean) {
+        updateDraft(_state.value.draft.copy(isAnonymous = v))
+    }
 
-    // --------------------------
-    // Anexos (foto/vídeo/áudio)
-    // --------------------------
+    fun setTerms(v: Boolean) {
+        updateDraft(_state.value.draft.copy(acceptedTerms = v))
+    }
+
+    fun setUseCurrentLocation(v: Boolean) {
+        updateDraft(_state.value.draft.copy(useCurrentLocation = v))
+    }
+
+    fun setManualLocation(v: String) {
+        updateDraft(_state.value.draft.copy(manualLocationText = v))
+    }
+
+    fun setDateTimeMillis(v: Long) {
+        updateDraft(_state.value.draft.copy(dateTimeMillis = v))
+    }
+
     fun addAttachment(uri: String, type: AttachmentType) {
         val current = _state.value.draft.attachments
         if (current.size >= 3) return
+
         val next = (current + Attachment(uri = uri, type = type))
-            .distinctBy { it.uri } // evita duplicar o mesmo uri
+            .distinctBy { it.uri }
+
         updateDraft(_state.value.draft.copy(attachments = next))
     }
 
@@ -147,17 +205,19 @@ class ReportViewModel @Inject constructor(
         updateDraft(_state.value.draft.copy(attachments = next))
     }
 
-    // --------------------------
-    // Localização (best location)
-    // --------------------------
     fun captureLocation(hasPermission: Boolean) {
         if (!hasPermission) {
-            _state.value = _state.value.copy(errorMessage = "Permissão de localização necessária.")
+            _state.value = _state.value.copy(
+                errorMessage = "Permissão de localização necessária."
+            )
             return
         }
 
         viewModelScope.launch {
-            _state.value = _state.value.copy(isGettingLocation = true, errorMessage = null)
+            _state.value = _state.value.copy(
+                isGettingLocation = true,
+                errorMessage = null
+            )
 
             val loc = locationProvider.getBestLocation()
 
@@ -172,17 +232,14 @@ class ReportViewModel @Inject constructor(
             val lat = loc.first
             val lon = loc.second
 
-            // 1) salva coordenadas imediatamente
             updateDraft(_state.value.draft.copy(lat = lat, lon = lon))
 
-            // 2) resolve endereço em background (não trava UI)
             val resolved = withContext(Dispatchers.IO) {
                 reverseGeocoder.fromLatLng(lat, lon)
             }
 
             _state.value = _state.value.copy(isGettingLocation = false)
 
-            // 3) se conseguiu, salva campos do endereço
             if (resolved != null) {
                 updateDraft(
                     _state.value.draft.copy(
@@ -197,21 +254,22 @@ class ReportViewModel @Inject constructor(
                     errorMessage = "Localização capturada, mas não foi possível obter o endereço."
                 )
             }
-
         }
     }
 
     fun syncNow() {
-        viewModelScope.launch { syncPendingQueue() }
+        viewModelScope.launch {
+            syncPendingQueue()
+        }
     }
 
-    // --------------------------
-    // Envio / Offline pendente
-    // --------------------------
     fun submit(onSuccess: () -> Unit) {
-        val s = _state.value
-        if (!s.canSubmit) {
-            _state.value = s.copy(errorMessage = "Preencha os campos obrigatórios para enviar.")
+        val currentState = _state.value
+
+        if (!currentState.canSubmit) {
+            _state.value = currentState.copy(
+                errorMessage = "Preencha os campos obrigatórios para enviar."
+            )
             return
         }
 
@@ -227,11 +285,14 @@ class ReportViewModel @Inject constructor(
                 val record = OccurrenceRecord(
                     id = UUID.randomUUID().toString(),
                     createdAtMillis = System.currentTimeMillis(),
-                    status = if (_state.value.isOnline) ReportStatus.SYNCED else ReportStatus.QUEUED,
+                    status = if (_state.value.isOnline) {
+                        ReportStatus.SYNCED
+                    } else {
+                        ReportStatus.QUEUED
+                    },
                     draft = draft
                 )
 
-                // Sempre entra no histórico (pra você ver no pitch)
                 store.addToHistory(record)
 
                 if (_state.value.isOnline) {
@@ -241,7 +302,6 @@ class ReportViewModel @Inject constructor(
                     _state.value = ReportUiState()
                     onSuccess()
                 } else {
-                    // Offline: entra na fila
                     store.enqueuePending(record)
                     store.clearDraft()
                     _state.value = ReportUiState(isOfflinePending = true)

@@ -18,15 +18,18 @@ import br.com.infoplus.infoplus.features.auth.RegisterScreen
 import br.com.infoplus.infoplus.features.history.HistoryDetailScreen
 import br.com.infoplus.infoplus.features.history.HistoryScreen
 import br.com.infoplus.infoplus.features.home.HomeScreen
-import br.com.infoplus.infoplus.features.map.CasesMapScreen
+import br.com.infoplus.infoplus.features.map.MapHomeScreen
 import br.com.infoplus.infoplus.features.opening.OpeningScreen
 import br.com.infoplus.infoplus.features.opportunities.OpportunitiesScreen
 import br.com.infoplus.infoplus.features.report.ReportScreen
 import br.com.infoplus.infoplus.features.report.ReportSuccessScreen
 import br.com.infoplus.infoplus.features.support.SupportScreen
+import br.com.infoplus.infoplus.core.sidebar.AppDrawerItem
 
 @Composable
-fun AppNavGraph() {
+fun AppNavGraph(
+    onExitApp: () -> Unit
+) {
     val navController = rememberNavController()
 
     NavHost(
@@ -60,7 +63,63 @@ fun AppNavGraph() {
             HistoryDetailScreen(navController, id)
         }
 
-        composable(Routes.MAP) { CasesMapScreen(navController) }
+        composable(Routes.MAP) {
+            MapHomeScreen(
+                onDrawerItemClick = { item ->
+                    when (item) {
+
+                        // 🚗 Planejar percurso (ainda não implementado)
+                        AppDrawerItem.PlanRoute -> {
+                            // TODO: implementar depois
+                        }
+
+                        // 📍 Histórico de Ocorrências
+                        AppDrawerItem.OccurrenceHistory -> {
+                            navController.navigate(Routes.HISTORY)
+                        }
+
+                        // 🛟 Recursos de Apoio
+                        AppDrawerItem.SupportResources -> {
+                            navController.navigate(Routes.SUPPORT)
+                        }
+
+                        // 🤝 Apoio Comunitário (ainda não implementado)
+                        AppDrawerItem.CommunitySupport -> {
+                            // TODO: criar tela depois
+                            // pode usar placeholder:
+                            navController.navigate(Routes.MEMORIAL)
+                        }
+
+                        // 💼 Editais e Vagas
+                        AppDrawerItem.Opportunities -> {
+                            navController.navigate(Routes.OPPORTUNITIES)
+                        }
+
+                        // 💬 Caixa de entrada (não implementado ainda)
+                        AppDrawerItem.Inbox -> {
+                            // TODO
+                        }
+
+                        // ⚙️ Configurações
+                        AppDrawerItem.Settings -> {
+                            // TODO
+                        }
+
+                        // ❓ Ajuda
+                        AppDrawerItem.HelpContent -> {
+                            // TODO
+                        }
+
+                        // 🚪 Sair
+                        AppDrawerItem.ExitApp -> Unit
+                    }
+                },
+                onExitApp = onExitApp,
+                onQuickAlertClick = {
+                    navController.navigate(Routes.REPORT)
+                }
+            )
+        }
         composable(Routes.SUPPORT) { SupportScreen(navController) }
         composable(Routes.OPPORTUNITIES) { OpportunitiesScreen(navController) }
 
