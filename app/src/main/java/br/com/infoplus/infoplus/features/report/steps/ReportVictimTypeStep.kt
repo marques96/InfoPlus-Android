@@ -1,7 +1,10 @@
 package br.com.infoplus.infoplus.features.report.steps
 
-import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.dp
 import br.com.infoplus.infoplus.features.report.components.ReportStepScaffold
 import br.com.infoplus.infoplus.features.report.components.SelectionOptionGrid
 import br.com.infoplus.infoplus.features.report.components.SelectionOptionItem
@@ -17,11 +20,13 @@ fun ReportVictimTypeStep(
     val options = listOf(
         SelectionOptionItem(
             key = VictimType.SELF.name,
-            label = "Comigo"
+            label = "Comigo",
+            icon = Icons.Default.Person
         ),
         SelectionOptionItem(
             key = VictimType.OTHER.name,
-            label = "Outra pessoa"
+            label = "Outra pessoa",
+            icon = Icons.Default.People
         )
     )
 
@@ -43,7 +48,7 @@ fun ReportVictimTypeStep(
             },
             minColumnsOnCompact = 2,
             minColumnsOnLarge = 2,
-            itemHeight = (76.dp)
+            itemHeight = (100.dp)
         )
     }
 }

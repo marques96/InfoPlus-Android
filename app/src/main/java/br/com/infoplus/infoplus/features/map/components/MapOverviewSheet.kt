@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GppGood
@@ -20,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -42,139 +46,102 @@ fun MapOverviewSheet(
             .fillMaxWidth()
             .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp, vertical = 10.dp)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = "Panorama da sua região",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
-        )
+        // Cabeçalho Estilo Waze
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = "Olá! Está tudo bem?",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Confira o panorama da sua região",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Acompanhe a segurança ao seu redor em tempo real",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             SummaryCard(
                 modifier = Modifier.weight(1f),
-                title = "Ocorrências próximas",
+                title = "Incidentes",
                 value = nearbyOccurrencesCount.toString(),
-                description = when {
-                    nearbyOccurrencesCount == 0 -> "Nenhum registro no raio atual"
-                    nearbyOccurrencesCount == 1 -> "1 incidente próximo"
-                    else -> "$nearbyOccurrencesCount incidentes próximos"
-                },
+                description = if (nearbyOccurrencesCount == 0) "Raio limpo" else "Perto de você",
                 icon = {
                     Icon(
                         imageVector = Icons.Default.WarningAmber,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = if (nearbyOccurrencesCount > 0) Color(0xFFD32F2F) else Color(0xFF757575),
+                        modifier = Modifier.size(28.dp)
                     )
                 },
-                containerTint = when {
-                    nearbyOccurrencesCount == 0 -> MaterialTheme.colorScheme.surfaceVariant
-                    nearbyOccurrencesCount in 1..2 -> Color(0xFFFFF3E0)
-                    else -> Color(0xFFFFEBEE)
-                }
+                containerTint = Color.White
             )
 
             SummaryCard(
                 modifier = Modifier.weight(1f),
-                title = "Zonas seguras",
+                title = "Zonas Seguras",
                 value = nearbySafeZonesCount.toString(),
-                description = when {
-                    nearbySafeZonesCount == 0 -> "Nenhuma zona segura próxima"
-                    nearbySafeZonesCount == 1 -> "1 zona segura por perto"
-                    else -> "$nearbySafeZonesCount zonas seguras por perto"
-                },
+                description = "Pontos de apoio",
                 icon = {
                     Icon(
                         imageVector = Icons.Default.GppGood,
-                        contentDescription = null
+                        contentDescription = null,
+                        tint = Color(0xFF1976D2),
+                        modifier = Modifier.size(28.dp)
                     )
                 },
-                containerTint = Color(0xFFEAF7EE)
+                containerTint = Color.White
             )
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         RegionStatusCard(
             state = regionState,
             message = safetyMessage
         )
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         Surface(
-            shape = MaterialTheme.shapes.extraLarge,
-            tonalElevation = 2.dp,
-            shadowElevation = 4.dp,
-            color = MaterialTheme.colorScheme.surface
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
         ) {
-            Column(
-                modifier = Modifier.padding(18.dp)
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Place,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Como interpretar",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = "• Ocorrências próximas representam registros dentro do raio monitorado da sua localização.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Icon(
+                    imageVector = Icons.Default.Place,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
                 )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "• Zonas seguras indicam áreas com melhor contexto recente e menor concentração de alertas.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-                Divider()
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Text(
-                    text = "Dica",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.SemiBold
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = "Arraste esta barra para cima para acompanhar o panorama da região enquanto navega pelo mapa.",
-                    style = MaterialTheme.typography.bodyMedium
+                    text = "Precisa de ajuda? Explore o menu lateral para ver recursos de apoio e dicas.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(16.dp))
     }
 }
 

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +43,7 @@ fun OpeningScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
-            painter = painterResource(id = R.drawable.info), // ajuste se o nome for outro
+            painter = painterResource(id = R.drawable.info), 
             contentDescription = "Info+ logo",
             modifier = Modifier.width(260.dp)
         )
@@ -51,7 +52,7 @@ fun OpeningScreen(navController: NavController) {
 
         Text(
             text = "Tornar visível o que é\nsilenciado",
-            color = Color(0xFF4B49C7),
+            color = Color(0xFF0091EA), // Azul primário (antigo roxo removido)
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center

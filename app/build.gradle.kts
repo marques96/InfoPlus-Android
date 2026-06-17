@@ -19,17 +19,17 @@ val mapsKey = localProperties.getProperty("MAPS_API_KEY", "")
 
 android {
     namespace = "br.com.infoplus.infoplus"
-    compileSdk = 36
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "br.com.infoplus.infoplus"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        resValue("string", "google_maps_key", mapsKey)
+        resValue("string", "google_maps_key", mapsKey.ifBlank { "AIzaSyAImlR7o9_8DYK1wmhWCKR6QCeS0dCt_xc" })
     }
 
     buildTypes {

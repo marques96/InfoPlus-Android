@@ -45,7 +45,13 @@ data class MapHomeUiState(
     val userSpeedMetersPerSecond: Float = 0f,
     val userBearing: Float = 0f,
     val sensorBearing: Float = 0f,
-    val effectiveBearing: Float = 0f
+    val effectiveBearing: Float = 0f,
+    
+    // Feature de Áudio
+    val isRecordingAudio: Boolean = false,
+    val recordingDurationSeconds: Int = 0,
+    val lastRecordedAudioUri: String? = null,
+    val showAudioRegisterPrompt: Boolean = false
 )
 
 @HiltViewModel
@@ -61,10 +67,50 @@ class MapHomeViewModel @Inject constructor(
 
     private var locationUpdatesJob: Job? = null
     private var orientationUpdatesJob: Job? = null
+    private var recordingTimerJob: Job? = null
 
     init {
         observeHistory()
     }
+
+    // --- Audio Feature Actions ---
+
+    fun startRecording() {
+        _state.value = _state.value.copy(
+            isRecordingAudio = true,
+            recordingDurationSeconds = 0,
+            showAudioRegisterPrompt = false
+        )
+        
+        recordingTimerJob?.cancel()
+        recordingTimerJob = viewModelScope.launch {
+            while (true) {
+                kotlinx.coroutines.delay(1000)
+                _state.value = _state.value.copy(
+                    recordingDurationSeconds = _state.value.recordingDurationSeconds + 1
+                )
+            }
+        }
+        
+        // No mundo real, aqui chamaria um MediaRecorderWrapper
+    }
+
+    fun stopRecording() {
+        recordingTimerJob?.cancel()
+        recordingTimerJob = null
+        
+        _state.value = _state.value.copy(
+            isRecordingAudio = false,
+            lastRecordedAudioUri = "content://audio/last_recorded.mp3", // Mock
+            showAudioRegisterPrompt = true
+        )
+    }
+
+    fun dismissAudioPrompt() {
+        _state.value = _state.value.copy(showAudioRegisterPrompt = false)
+    }
+
+    // ----------------------------
 
     fun onScreenResumed() {
         refreshLocationAvailability()

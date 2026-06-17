@@ -63,6 +63,7 @@ fun MapContainer(
     hasLocationPermission: Boolean,
     followUser: Boolean,
     userBearing: Float = 0f,
+    isDarkMode: Boolean = false,
     onMarkerClick: (MapMarkerUi) -> Unit,
     onMapTap: () -> Unit = {},
     onUserMoveMap: () -> Unit,

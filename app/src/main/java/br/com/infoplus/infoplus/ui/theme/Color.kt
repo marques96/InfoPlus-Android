@@ -13,31 +13,31 @@ import androidx.compose.ui.graphics.Color
  */
 
 // ===== Brand =====
-// Violeta (identidade)
-val InfoPrimary = Color(0xFF451962)        // violeta institucional (já era seu rumo)
-val InfoPrimaryDark = Color(0xFF35307A)    // violeta mais profundo (dark/topbar)
+// Azul (identidade) - Inspirado no Waze, transmite clareza e acolhimento
+val InfoPrimary = Color(0xFF0091EA)        // Azul vibrante e profissional
+val InfoPrimaryDark = Color(0xFF01579B)    // Azul profundo
 
 // Navy (apoio institucional / credibilidade)
 val InfoNavy = Color(0xFF0B1F3B)
 val InfoNavyDeep = Color(0xFF08162B)
 
-// Acentos de acolhimento
-val InfoSecondary = Color(0xFF7C6DFF)      // violeta vivo (ações/realce)
-val InfoTertiary = Color(0xFFB7AEFF)       // lavanda suave (apoio/realce leve)
+// Acentos de acolhimento (Estilo Waze - tons mais vivos e amigáveis)
+val InfoSecondary = Color(0xFF33CCFF)      // Azul Celeste (o azul do escudo que o usuário gostou)
+val InfoTertiary = Color(0xFFFFDD00)       // Amarelo atenção/alerta
 
 // ===== Light =====
-val InfoBgLight = Color(0xFFFBFAFF)
+val InfoBgLight = Color(0xFFF8FAFC)         // Cinza azulado bem claro e limpo
 val InfoSurfaceLight = Color(0xFFFFFFFF)
-val InfoSurfaceVariantLight = Color(0xFFF3F1FF)     // leve lavanda
-val InfoOnLight = Color(0xFF14141A)
-val InfoOnLightMuted = Color(0xFF4B4B5A)
+val InfoSurfaceVariantLight = Color(0xFFF1F5F9)
+val InfoOnLight = Color(0xFF0F172A)
+val InfoOnLightMuted = Color(0xFF64748B)
 
-// Containers (chips/badges com boa hierarquia)
-val InfoPrimaryContainerLight = Color(0xFFE7E4FF)   // lavanda clara
-val InfoOnPrimaryContainerLight = Color(0xFF2C2468)
+// Containers
+val InfoPrimaryContainerLight = Color(0xFFE0F2FE)
+val InfoOnPrimaryContainerLight = Color(0xFF0369A1)
 
-val InfoSecondaryContainerLight = Color(0xFFE6EEF9) // navy tint (institucional)
-val InfoOnSecondaryContainerLight = Color(0xFF0B1F3B)
+val InfoSecondaryContainerLight = Color(0xFFE0F7FA)
+val InfoOnSecondaryContainerLight = Color(0xFF006064)
 
 // ===== Dark =====
 val InfoBgDark = Color(0xFF0F0F16)                  // escuro confortável (não preto puro)

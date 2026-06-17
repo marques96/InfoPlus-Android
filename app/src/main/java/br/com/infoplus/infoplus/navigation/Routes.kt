@@ -14,5 +14,6 @@ object Routes {
     const val MEMORIAL = "memorial"
     const val SUPPORT = "support"
     const val OPPORTUNITIES = "opportunities"
-
+    const val HELP_CONTENT = "help_content"
+    const val SETTINGS = "settings"
 }

@@ -19,7 +19,7 @@ class MainActivity : ComponentActivity() {
             val themeVm: br.com.infoplus.infoplus.core.settings.ThemeViewModel =
                 androidx.hilt.navigation.compose.hiltViewModel()
 
-            val isDark = themeVm.isDark.collectAsState().value
+            val isDark = themeVm.isDarkTheme()
 
             InfoPlusTheme(darkTheme = isDark) {
                 AppNavGraph(

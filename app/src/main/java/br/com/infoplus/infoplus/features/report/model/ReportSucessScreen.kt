@@ -67,8 +67,8 @@ fun ReportSuccessScreen(
                 navigationIcon = {
                     IconButton(
                         onClick = {
-                            navController.navigate(Routes.HOME) {
-                                popUpTo(Routes.HOME) { inclusive = true }
+                            navController.navigate(Routes.MAP) {
+                                popUpTo(Routes.MAP) { inclusive = true }
                             }
                         }
                     ) {
@@ -176,12 +176,12 @@ fun ReportSuccessScreen(
 
             OutlinedButton(
                 onClick = {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.HOME) { inclusive = true }
+                    navController.navigate(Routes.MAP) {
+                        popUpTo(Routes.MAP) { inclusive = true }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
-            ) { Text("Voltar ao menu") }
+            ) { Text("Voltar ao mapa") }
         }
     }
 }

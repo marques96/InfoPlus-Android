@@ -1,13 +1,7 @@
 package br.com.infoplus.infoplus.features.report.model
 
 enum class ReportStep {
-    INTRO,
-    CATEGORY,
-    VICTIM_TYPE,
-    VICTIM_GENDER,
-    DESCRIPTION,
-    LOCATION,
-    ATTACHMENTS,
-    PRIVACY,
-    REVIEW
+    INFO_BASICA,      // Categoria + Quem é a vítima
+    RELATO,           // O que aconteceu + Anexos
+    LOCAL_PRIVACIDADE // Onde + Anonimato + Review
 }

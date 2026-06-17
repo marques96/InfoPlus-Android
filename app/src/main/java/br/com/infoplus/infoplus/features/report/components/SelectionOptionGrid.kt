@@ -17,12 +17,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.sp
+
 data class SelectionOptionItem(
     val key: String,
-    val label: String
+    val label: String,
+    val icon: ImageVector? = null
 )
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -35,7 +46,7 @@ fun SelectionOptionGrid(
     minColumnsOnCompact: Int = 2,
     minColumnsOnLarge: Int = 3,
     compactBreakpoint: Int = 520,
-    itemHeight: androidx.compose.ui.unit.Dp = 76.dp
+    itemHeight: androidx.compose.ui.unit.Dp = 86.dp
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
 
@@ -59,6 +70,7 @@ fun SelectionOptionGrid(
             options.forEach { option ->
                 SelectionOptionCard(
                     text = option.label,
+                    icon = option.icon,
                     selected = selectedKey == option.key,
                     onClick = { onSelect(option) },
                     modifier = Modifier
@@ -73,18 +85,19 @@ fun SelectionOptionGrid(
 @Composable
 private fun SelectionOptionCard(
     text: String,
+    icon: ImageVector?,
     selected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val containerColor = if (selected) {
-        MaterialTheme.colorScheme.primary
+        MaterialTheme.colorScheme.primaryContainer
     } else {
         MaterialTheme.colorScheme.surface
     }
 
     val contentColor = if (selected) {
-        MaterialTheme.colorScheme.onPrimary
+        MaterialTheme.colorScheme.onPrimaryContainer
     } else {
         MaterialTheme.colorScheme.onSurface
     }
@@ -92,30 +105,42 @@ private fun SelectionOptionCard(
     val borderColor = if (selected) {
         MaterialTheme.colorScheme.primary
     } else {
-        MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+        MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
     }
 
     Surface(
         modifier = modifier
             .border(
-                width = 1.dp,
+                width = if (selected) 2.dp else 1.dp,
                 color = borderColor,
                 shape = RoundedCornerShape(20.dp)
             )
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(20.dp),
         color = containerColor,
-        tonalElevation = if (selected) 2.dp else 0.dp,
-        shadowElevation = if (selected) 4.dp else 1.dp
+        tonalElevation = if (selected) 4.dp else 0.dp
     ) {
-        Box(
-            modifier = Modifier.fillMaxWidth(),
-            contentAlignment = Alignment.Center
+        Column(
+            modifier = Modifier.padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (selected) MaterialTheme.colorScheme.primary else contentColor,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+            }
             Text(
                 text = text,
                 color = contentColor,
-                style = MaterialTheme.typography.bodyLarge,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                    lineHeight = 16.sp
+                ),
                 textAlign = TextAlign.Center
             )
         }

@@ -32,12 +32,12 @@ import br.com.infoplus.infoplus.navigation.Routes
 @Composable
 fun LoginScreen(navController: NavController) {
     // Identidade (ajuste fino depois se quiser)
-    val primary = Color(0xFF5B5A95)        // roxo principal
-    val link = Color(0xFF6A5ACD)           // roxo do link
-    val title = primary          // título mais sóbrio (menos "azulão")
-    val text = Color(0xFF111111)           // texto preto
-    val line = Color(0xFFB9B2B2)           // divisor
-    val socialBorder = Color(0xFFCDC7C7)
+    val primary = MaterialTheme.colorScheme.primary
+    val link = MaterialTheme.colorScheme.secondary
+    val title = primary
+    val text = MaterialTheme.colorScheme.onSurface
+    val line = MaterialTheme.colorScheme.outlineVariant
+    val socialBorder = MaterialTheme.colorScheme.outline
 
     // Gradiente sutil (diferença pequena = moderno)
     val backgroundBrush = Brush.verticalGradient(
@@ -164,7 +164,7 @@ fun LoginScreen(navController: NavController) {
             Button(
                 onClick = {
                     // autenticação real depois
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.MAP) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },

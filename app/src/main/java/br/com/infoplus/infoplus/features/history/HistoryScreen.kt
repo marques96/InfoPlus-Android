@@ -1,41 +1,30 @@
 package br.com.infoplus.infoplus.features.history
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import br.com.infoplus.infoplus.core.ui.components.InfoEmptyState
-import br.com.infoplus.infoplus.core.ui.components.ScreenContainer
+import br.com.infoplus.infoplus.features.report.model.OccurrenceCategory
+import br.com.infoplus.infoplus.features.report.model.OccurrenceRecord
 import br.com.infoplus.infoplus.features.report.model.ReportStatus
 import br.com.infoplus.infoplus.navigation.Routes
 import java.text.SimpleDateFormat
@@ -62,129 +51,172 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Histórico") },
+                title = { Text("Seu Histórico", fontWeight = FontWeight.Bold) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         },
-        containerColor = androidx.compose.ui.graphics.Color.Transparent,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { navController.navigate(Routes.REPORT) },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = MaterialTheme.colorScheme.primary,
+                shape = CircleShape
             ) {
-                Text("+", color = MaterialTheme.colorScheme.onPrimary)
+                Icon(Icons.Default.Warning, contentDescription = "Relatar", tint = MaterialTheme.colorScheme.onPrimary)
             }
         }
     ) { padding ->
-        ScreenContainer(padding = padding) {
-            Column(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                SegmentedButton(
+                    selected = filter == HistoryFilter.ALL,
+                    onClick = { filter = HistoryFilter.ALL },
+                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
+                ) { Text("Todos") }
 
-                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                    SegmentedButton(
-                        selected = filter == HistoryFilter.ALL,
-                        onClick = { filter = HistoryFilter.ALL },
-                        shape = SegmentedButtonDefaults.itemShape(index = 0, count = 3)
-                    ) { Text("Todos") }
+                SegmentedButton(
+                    selected = filter == HistoryFilter.PENDING,
+                    onClick = { filter = HistoryFilter.PENDING },
+                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
+                ) { Text("Pendentes") }
 
-                    SegmentedButton(
-                        selected = filter == HistoryFilter.PENDING,
-                        onClick = { filter = HistoryFilter.PENDING },
-                        shape = SegmentedButtonDefaults.itemShape(index = 1, count = 3)
-                    ) { Text("Pendentes") }
+                SegmentedButton(
+                    selected = filter == HistoryFilter.SENT,
+                    onClick = { filter = HistoryFilter.SENT },
+                    shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
+                ) { Text("Enviados") }
+            }
 
-                    SegmentedButton(
-                        selected = filter == HistoryFilter.SENT,
-                        onClick = { filter = HistoryFilter.SENT },
-                        shape = SegmentedButtonDefaults.itemShape(index = 2, count = 3)
-                    ) { Text("Enviados") }
-                }
-
-                Spacer(Modifier.height(12.dp))
-
-                if (filtered.isEmpty()) {
-                    InfoEmptyState(
-                        title = if (items.isEmpty()) "Nenhuma ocorrência ainda" else "Nada neste filtro",
-                        subtitle = if (items.isEmpty())
-                            "Registre uma ocorrência para construir histórico e apoiar dados para políticas públicas."
-                        else
-                            "Selecione outro filtro para visualizar seus registros.",
-                        primaryActionText = "Registrar ocorrência",
-                        onPrimaryAction = { navController.navigate(Routes.REPORT) },
-                        modifier = Modifier.fillMaxSize()
-                    )
-                    return@ScreenContainer
-                }
-
+            if (filtered.isEmpty()) {
+                InfoEmptyState(
+                    title = if (items.isEmpty()) "Nada por aqui ainda" else "Sem resultados",
+                    subtitle = if (items.isEmpty())
+                        "Seus relatos ajudam a tornar a cidade mais segura para todos."
+                    else
+                        "Tente mudar o filtro acima.",
+                    primaryActionText = "Registrar primeiro relato",
+                    onPrimaryAction = { navController.navigate(Routes.REPORT) },
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 96.dp)
+                    contentPadding = PaddingValues(16.dp)
                 ) {
                     items(filtered) { r ->
-                        val dateText = SimpleDateFormat("dd/MM/yyyy • HH:mm", Locale("pt", "BR"))
-                            .format(Date(r.createdAtMillis))
-
-                        val statusLabel = if (r.status == ReportStatus.SYNCED) "ENVIADO" else "PENDENTE"
-
-                        ElevatedCard(
-                            onClick = { navController.navigate("${Routes.HISTORY_DETAIL}/${r.id}") },
-                            colors = CardDefaults.elevatedCardColors(
-                                containerColor = MaterialTheme.colorScheme.surface
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(14.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    r.draft.title.ifBlank { "Ocorrência" },
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                val categoryText = r.draft.category?.name ?: "Sem categoria"
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    AssistChip(onClick = {}, label = { Text(categoryText) })
-                                    AssistChip(onClick = {}, label = { Text(statusLabel) })
-                                }
-
-                                val victimLabel = when {
-                                    r.draft.victimType == br.com.infoplus.infoplus.features.report.model.VictimType.OTHER ->
-                                        "Vítima: ${
-                                            r.draft.victimGender.name
-                                                .replace("_", " ")
-                                                .lowercase()
-                                                .replaceFirstChar { it.titlecase() }
-                                        }"
-                                    r.draft.victimType == br.com.infoplus.infoplus.features.report.model.VictimType.SELF ->
-                                        "Vítima: Você"
-                                    else -> "Vítima: Não informado"
-                                }
-
-                                Text(
-                                    text = victimLabel,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-
-                                Text(
-                                    text = dateText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
+                        HistoryItemCard(
+                            record = r,
+                            onClick = { navController.navigate("${Routes.HISTORY_DETAIL}/${r.id}") }
+                        )
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun HistoryItemCard(
+    record: OccurrenceRecord,
+    onClick: () -> Unit
+) {
+    val dateText = SimpleDateFormat("dd MMM, HH:mm", Locale("pt", "BR"))
+        .format(Date(record.createdAtMillis))
+
+    val isSynced = record.status == ReportStatus.SYNCED
+
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp)),
+        color = MaterialTheme.colorScheme.surface,
+        tonalElevation = 1.dp
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (isSynced) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = record.draft.category?.toIcon() ?: Icons.Default.MoreHoriz,
+                    contentDescription = null,
+                    tint = if (isSynced) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = record.draft.title.ifBlank { "Relato sem título" },
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = dateText,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text("•", color = MaterialTheme.colorScheme.outline)
+                    Icon(
+                        imageVector = if (isSynced) Icons.Default.CheckCircle else Icons.Default.CloudOff,
+                        contentDescription = null,
+                        modifier = Modifier.size(12.dp),
+                        tint = if (isSynced) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    )
+                    Text(
+                        text = if (isSynced) "Enviado" else "Pendente",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isSynced) Color(0xFF4CAF50) else Color(0xFFF44336)
+                    )
+                }
+            }
+
+            Icon(
+                imageVector = Icons.Default.ChevronRight,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline
+            )
+        }
+    }
+}
+
+private fun OccurrenceCategory.toIcon(): ImageVector = when(this) {
+    OccurrenceCategory.ASSALTO -> Icons.Default.Warning
+    OccurrenceCategory.ASSEDIO -> Icons.Default.RecordVoiceOver
+    OccurrenceCategory.VIOLENCIA -> Icons.Default.Gavel
+    OccurrenceCategory.DESAPARECIMENTO -> Icons.Default.Search
+    OccurrenceCategory.EMERGENCIA_MEDICA -> Icons.Default.MedicalServices
+    OccurrenceCategory.OUTROS -> Icons.Default.MoreHoriz
 }
 
 private enum class HistoryFilter { ALL, PENDING, SENT }

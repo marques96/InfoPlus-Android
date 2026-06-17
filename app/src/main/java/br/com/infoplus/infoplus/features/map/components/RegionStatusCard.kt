@@ -31,82 +31,58 @@ fun RegionStatusCard(
     state: RegionSafetyState,
     message: String
 ) {
-    val containerColor = when (state) {
-        RegionSafetyState.SAFE -> Color(0xFFEAF7EE)
-        RegionSafetyState.ATTENTION -> Color(0xFFFFF6E5)
-        RegionSafetyState.ALERT -> Color(0xFFFFECEC)
-    }
-
-    val badgeColor = when (state) {
-        RegionSafetyState.SAFE -> Color(0xFF2E7D32)
-        RegionSafetyState.ATTENTION -> Color(0xFFF9A825)
-        RegionSafetyState.ALERT -> Color(0xFFC62828)
+    val (containerColor, badgeColor, icon) = when (state) {
+        RegionSafetyState.SAFE -> Triple(Color(0xFFE3F2FD), Color(0xFF1976D2), Icons.Default.GppGood)
+        RegionSafetyState.ATTENTION -> Triple(Color(0xFFFFF3E0), Color(0xFFF57C00), Icons.Default.Info)
+        RegionSafetyState.ALERT -> Triple(Color(0xFFFFEBEE), Color(0xFFD32F2F), Icons.Default.WarningAmber)
     }
 
     val title = when (state) {
-        RegionSafetyState.SAFE -> "Você está em uma área estável"
-        RegionSafetyState.ATTENTION -> "Atenção à movimentação da região"
-        RegionSafetyState.ALERT -> "Área com maior atenção no momento"
-    }
-
-    val icon = when (state) {
-        RegionSafetyState.SAFE -> Icons.Default.GppGood
-        RegionSafetyState.ATTENTION -> Icons.Default.Info
-        RegionSafetyState.ALERT -> Icons.Default.WarningAmber
+        RegionSafetyState.SAFE -> "Área Estável"
+        RegionSafetyState.ATTENTION -> "Atenção Necessária"
+        RegionSafetyState.ALERT -> "Alerta de Segurança"
     }
 
     Surface(
-        shape = RoundedCornerShape(28.dp),
+        shape = RoundedCornerShape(24.dp),
         color = containerColor,
-        tonalElevation = 2.dp,
-        shadowElevation = 5.dp,
+        border = androidx.compose.foundation.BorderStroke(1.dp, badgeColor.copy(alpha = 0.2f)),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier.padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(Color.White, RoundedCornerShape(16.dp))
+                    .padding(12.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(42.dp)
-                        .background(
-                            color = badgeColor.copy(alpha = 0.14f),
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = badgeColor
-                    )
-                }
-
-                Column {
-                    Text(
-                        text = "Status da sua região",
-                        style = MaterialTheme.typography.labelLarge,
-                        color = badgeColor,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = badgeColor,
+                    modifier = Modifier.size(32.dp)
+                )
             }
 
-            Text(
-                text = message,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = badgeColor
+                )
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = androidx.compose.ui.unit.TextUnit.Unspecified
+                )
+            }
         }
     }
 }

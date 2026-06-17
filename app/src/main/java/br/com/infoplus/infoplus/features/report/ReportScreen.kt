@@ -20,16 +20,10 @@ import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import br.com.infoplus.infoplus.features.report.model.ReportStep
-import br.com.infoplus.infoplus.features.report.model.VictimType
-import br.com.infoplus.infoplus.features.report.steps.ReportAttachmentsStep
-import br.com.infoplus.infoplus.features.report.steps.ReportCategoryStep
-import br.com.infoplus.infoplus.features.report.steps.ReportDescriptionStep
+import br.com.infoplus.infoplus.features.report.steps.ReportContextStep
+import br.com.infoplus.infoplus.features.report.steps.ReportDetailsStep
+import br.com.infoplus.infoplus.features.report.steps.ReportFinalStep
 import br.com.infoplus.infoplus.features.report.steps.ReportIntroStep
-import br.com.infoplus.infoplus.features.report.steps.ReportLocationStep
-import br.com.infoplus.infoplus.features.report.steps.ReportPrivacyStep
-import br.com.infoplus.infoplus.features.report.steps.ReportReviewStep
-import br.com.infoplus.infoplus.features.report.steps.ReportVictimGenderStep
-import br.com.infoplus.infoplus.features.report.steps.ReportVictimTypeStep
 import br.com.infoplus.infoplus.navigation.Routes
 
 @Composable
@@ -40,7 +34,7 @@ fun ReportScreen(
     val state by vm.state.collectAsState()
     val shouldShowIntro by vm.shouldShowIntro.collectAsState()
 
-    var currentStep by rememberSaveable { mutableStateOf(ReportStep.CATEGORY) }
+    var currentStep by rememberSaveable { mutableStateOf(ReportStep.INFO_BASICA) }
     var hasLocationPermission by rememberSaveable { mutableStateOf(false) }
     var pendingLocationCapture by rememberSaveable { mutableStateOf(false) }
     var introDismissedThisSession by rememberSaveable { mutableStateOf(false) }
@@ -69,10 +63,7 @@ fun ReportScreen(
             return@BackHandler
         }
 
-        currentStep = previousStepOrNull(
-            step = currentStep,
-            victimType = state.draft.victimType
-        ) ?: run {
+        currentStep = previousStepOrNull(currentStep) ?: run {
             navController.popBackStack()
             return@BackHandler
         }
@@ -117,59 +108,39 @@ fun ReportScreen(
         label = "report-step-transition"
     ) { step ->
         when (step) {
-            ReportStep.INTRO -> Unit
-
-            ReportStep.CATEGORY -> {
-                ReportCategoryStep(
+            ReportStep.INFO_BASICA -> {
+                ReportContextStep(
                     selectedCategory = state.draft.category,
                     onSelectCategory = vm::setCategory,
-                    onNext = { currentStep = ReportStep.VICTIM_TYPE },
+                    selectedVictimType = state.draft.victimType,
+                    onSelectVictimType = vm::setVictimType,
+                    selectedGender = state.draft.victimGender,
+                    onSelectGender = vm::setVictimGender,
+                    onNext = { currentStep = ReportStep.RELATO },
                     onBack = { navController.popBackStack() }
                 )
             }
 
-            ReportStep.VICTIM_TYPE -> {
-                ReportVictimTypeStep(
-                    selectedVictimType = state.draft.victimType,
-                    onSelectVictimType = vm::setVictimType,
-                    onNext = { currentStep = ReportStep.VICTIM_GENDER },
-                    onBack = { currentStep = ReportStep.CATEGORY }
-                )
-            }
-
-            ReportStep.VICTIM_GENDER -> {
-                ReportVictimGenderStep(
-                    selectedGender = state.draft.victimGender,
-                    onSelectGender = vm::setVictimGender,
-                    onNext = { currentStep = ReportStep.DESCRIPTION },
-                    onBack = { currentStep = ReportStep.VICTIM_TYPE }
-                )
-            }
-
-            ReportStep.DESCRIPTION -> {
-                ReportDescriptionStep(
+            ReportStep.RELATO -> {
+                ReportDetailsStep(
                     title = state.draft.title,
-                    description = state.draft.description,
                     onTitleChange = vm::setTitle,
+                    description = state.draft.description,
                     onDescriptionChange = vm::setDescription,
-                    onNext = { currentStep = ReportStep.LOCATION },
-                    onBack = { currentStep = ReportStep.VICTIM_GENDER }
+                    attachments = state.draft.attachments,
+                    onAddAttachment = { uri, type -> vm.addAttachment(uri, type) },
+                    onRemoveAttachment = { uri -> vm.removeAttachment(uri) },
+                    onNext = { currentStep = ReportStep.LOCAL_PRIVACIDADE },
+                    onBack = { currentStep = ReportStep.INFO_BASICA }
                 )
             }
 
-            ReportStep.LOCATION -> {
-                ReportLocationStep(
+            ReportStep.LOCAL_PRIVACIDADE -> {
+                ReportFinalStep(
+                    draft = state.draft,
                     useCurrentLocation = state.draft.useCurrentLocation,
-                    manualLocationText = state.draft.manualLocationText,
-                    street = state.draft.street,
-                    number = state.draft.number,
-                    district = state.draft.district,
-                    city = state.draft.city,
-                    isGettingLocation = state.isGettingLocation,
-                    hasValidLocation = state.hasValidLocation,
-                    errorMessage = state.errorMessage,
                     onUseCurrentLocationChange = vm::setUseCurrentLocation,
-                    onManualLocationChange = vm::setManualLocation,
+                    isGettingLocation = state.isGettingLocation,
                     onCaptureLocation = {
                         if (hasLocationPermission) {
                             vm.captureLocation(true)
@@ -183,36 +154,10 @@ fun ReportScreen(
                             )
                         }
                     },
-                    onNext = { currentStep = ReportStep.ATTACHMENTS },
-                    onBack = { currentStep = ReportStep.DESCRIPTION }
-                )
-            }
-
-            ReportStep.ATTACHMENTS -> {
-                ReportAttachmentsStep(
-                    attachments = state.draft.attachments,
-                    onAddAttachment = vm::addAttachment,
-                    onRemoveAttachment = vm::removeAttachment,
-                    onError = vm::setError,
-                    onNext = { currentStep = ReportStep.PRIVACY },
-                    onBack = { currentStep = ReportStep.LOCATION }
-                )
-            }
-
-            ReportStep.PRIVACY -> {
-                ReportPrivacyStep(
                     isAnonymous = state.draft.isAnonymous,
-                    acceptedTerms = state.draft.acceptedTerms,
                     onAnonymousChange = vm::setAnonymous,
+                    acceptedTerms = state.draft.acceptedTerms,
                     onAcceptedTermsChange = vm::setTerms,
-                    onNext = { currentStep = ReportStep.REVIEW },
-                    onBack = { currentStep = ReportStep.ATTACHMENTS }
-                )
-            }
-
-            ReportStep.REVIEW -> {
-                ReportReviewStep(
-                    draft = state.draft,
                     canSubmit = state.canSubmit,
                     isSubmitting = state.isSubmitting,
                     onSubmit = {
@@ -223,7 +168,7 @@ fun ReportScreen(
                             }
                         }
                     },
-                    onBack = { currentStep = ReportStep.PRIVACY }
+                    onBack = { currentStep = ReportStep.RELATO }
                 )
             }
         }
@@ -231,18 +176,11 @@ fun ReportScreen(
 }
 
 private fun previousStepOrNull(
-    step: ReportStep,
-    victimType: VictimType?
+    step: ReportStep
 ): ReportStep? {
     return when (step) {
-        ReportStep.INTRO -> null
-        ReportStep.CATEGORY -> null
-        ReportStep.VICTIM_TYPE -> ReportStep.CATEGORY
-        ReportStep.VICTIM_GENDER -> ReportStep.VICTIM_TYPE
-        ReportStep.DESCRIPTION -> ReportStep.VICTIM_GENDER
-        ReportStep.LOCATION -> ReportStep.DESCRIPTION
-        ReportStep.ATTACHMENTS -> ReportStep.LOCATION
-        ReportStep.PRIVACY -> ReportStep.ATTACHMENTS
-        ReportStep.REVIEW -> ReportStep.PRIVACY
+        ReportStep.INFO_BASICA -> null
+        ReportStep.RELATO -> ReportStep.INFO_BASICA
+        ReportStep.LOCAL_PRIVACIDADE -> ReportStep.RELATO
     }
 }

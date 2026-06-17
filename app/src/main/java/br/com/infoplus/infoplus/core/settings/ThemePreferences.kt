@@ -1,7 +1,7 @@
 package br.com.infoplus.infoplus.core.settings
 
 import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -12,16 +12,27 @@ import javax.inject.Singleton
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
+enum class ThemeMode {
+    AUTO, LIGHT, DARK
+}
+
 @Singleton
 class ThemePreferences @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
-    private val KEY_DARK = booleanPreferencesKey("dark_theme")
+    private val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
 
-    val darkThemeFlow: Flow<Boolean> =
-        context.dataStore.data.map { prefs -> prefs[KEY_DARK] ?: false }
+    val themeModeFlow: Flow<ThemeMode> =
+        context.dataStore.data.map { prefs -> 
+            val modeStr = prefs[KEY_THEME_MODE] ?: ThemeMode.AUTO.name
+            try {
+                ThemeMode.valueOf(modeStr)
+            } catch (e: Exception) {
+                ThemeMode.AUTO
+            }
+        }
 
-    suspend fun setDarkTheme(enabled: Boolean) {
-        context.dataStore.edit { prefs -> prefs[KEY_DARK] = enabled }
+    suspend fun setThemeMode(mode: ThemeMode) {
+        context.dataStore.edit { prefs -> prefs[KEY_THEME_MODE] = mode.name }
     }
 }
